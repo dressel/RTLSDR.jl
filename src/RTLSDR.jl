@@ -6,7 +6,7 @@ import Base.open, Base.close
 # I'm not sure I want this in here
 using PyPlot
 
-export RtlSdr, open, close, read_samples, get_strength
+export RtlSdr, open, close, read_samples, get_strength, get_strength2
 export get_rate, set_rate, get_freq, set_freq
 
 include("c_interface.jl")
@@ -89,8 +89,16 @@ function get_strength(r::RtlSdr, n=10; plot_max::Bool=false)
 	max_sample = -Inf
 	max_p = 0
 	sample_rate = get_rate(r)
-	for i = 1:10
-		samples = read_samples(r, 256*1024)
+	for i = 1:n
+		#samples = read_samples(r,256*10240)
+		#samples = read_samples(r, 256 * 1024 * 8)
+		#samples = read_samples(r,256*1024)
+		#samples = read_samples(r,256*940)
+		#samples = read_samples(r,256*920)
+		#samples = read_samples(r,256*900)
+		#samples = read_samples(r,256*800)
+		samples = read_samples(r, 256*500)
+		#samples = read_samples(r, 256*50)
 		p = welch_pgram(samples, fs=sample_rate)
 		temp_max = maximum(p.power)
 		if temp_max > max_sample 
@@ -103,6 +111,42 @@ function get_strength(r::RtlSdr, n=10; plot_max::Bool=false)
 		plot(max_p.freq + center_freq, 10log10(max_p.power))
 	end
 	return 10log10(max_sample)
+end
+
+
+
+function get_strength2(r::RtlSdr, n=10; plot_max::Bool=false)
+	max_sample = -Inf
+	max_p = 0
+	sample_rate = get_rate(r)
+	max_freqs = 0
+	max_pows = 0
+	for i = 1:n
+		samples = read_samples(r, 256*500)
+		p = welch_pgram(samples, fs=sample_rate)
+		n_plot = round(Int, length(p.power) / 2, RoundDown)-3
+		pows = p.power[2:n_plot]
+		freqs = p.freq[2:n_plot]
+
+		# taking maximum...
+		temp_max = maximum(pows)
+
+		# taking spectrum max...
+		temp_max = sum(pows)
+
+		if temp_max > max_sample 
+			max_sample = temp_max
+			max_p = deepcopy(p)
+			max_pows = deepcopy(pows)
+			max_freqs = deepcopy(freqs)
+		end
+	end
+	if plot_max
+		center_freq = get_freq(r)
+		#plot(max_p.freq + center_freq, 10log10(max_p.power))
+		plot(max_freqs + center_freq, 10log10(max_pows))
+	end
+	return 10log10(max_sample*146.)
 end
 
 
