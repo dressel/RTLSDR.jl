@@ -11,7 +11,7 @@ export get_rate, set_rate, get_freq, set_freq
 
 include("c_interface.jl")
 
-type RtlSdr
+mutable struct RtlSdr
 	valid_ptr::Bool
 	dongle_ptr::Ptr{rtlsdr_dev}
 
