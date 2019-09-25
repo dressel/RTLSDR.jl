@@ -1,12 +1,29 @@
 # RTLSDR
 
-A wrapper for the librtlsdr libraries. Currently, this only works on linux (I think). You need to download the librtlsdr libraries. In the future, I will discuss how to do this.
+A wrapper for the librtlsdr C libraries.
+Currently, this only works on Linux (I think).
+You need to download the librtlsdr libraries.
 
-This code is heavily based off the [pyrtlsdr libary](https://github.com/roger-/pyrtlsdr) by github user `roger-`.
+Julia needs to find `librtlsdr.so` somewhere on your system.
+To see if Julia can find it, you can use `find_library`:
+
+```julia
+using Libdl
+find_library("librtlsdr")   # returns empty string if library not found
+```
+
+You can also type the following into an Ubuntu shell to help find it:
+
+```shell
+ldconfig -p | grep librtlsdr
+```
+
+This code is heavily based off the
+[pyrtlsdr libary](https://github.com/roger-/pyrtlsdr) by github user `roger-`.
 
 ## Example
-DOCUMENTATION NEEDS A LOT OF WORK
-```
+
+```julia
 using RTLSDR
 
 r = RtlSdr()		# creates a RtlSdr object with a dongle pointer
