@@ -44,13 +44,19 @@ end
 
 function rtlsdr_get_center_freq(rf::Ref{rtlsdr_dev})
     ret = ccall( (:rtlsdr_get_center_freq, "librtlsdr"), UInt32, (Ref{rtlsdr_dev},), rf)
-    if ret != 0; throw(RTLSDRError("RTLSDR.jl reports: Error getting center frequency (error code $ret).")); end
+    if ret < 0
+        throw(RTLSDRError("RTLSDR.jl reports: Error getting center frequency (error code $ret)."));
+    end
+    return ret
 end
 
 # sample rate
 function rtlsdr_get_sample_rate(rf::Ref{rtlsdr_dev})
     ret = ccall( (:rtlsdr_get_sample_rate, "librtlsdr"), UInt32, (Ref{rtlsdr_dev},), rf)
-    if ret != 0; throw(RTLSDRError("RTLSDR.jl reports: Error getting sample rate (error code $ret).")); end
+    if ret < 0
+        throw(RTLSDRError("RTLSDR.jl reports: Error getting sample rate (error code $ret)."));
+    end
+    return ret
 end
 
 function rtlsdr_set_sample_rate(rf::Ref{rtlsdr_dev}, sample_rate)
