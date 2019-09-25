@@ -7,7 +7,7 @@ import Base.open, Base.close
 using PyPlot
 
 export RtlSdr, open, close, read_samples, get_strength, get_strength2
-export get_rate, set_rate, get_freq, set_freq
+export get_rate, set_rate, get_freq, set_freq, set_agc_mode, set_tuner_gain_mode
 
 include("c_interface.jl")
 
@@ -58,6 +58,17 @@ function get_freq(r::RtlSdr)
     return Int(freq)
 end
 
+# agc_mode
+function set_agc_mode(r::RtlSdr, mode)
+    @assert r.valid_ptr
+    rtlsdr_set_agc_mode(r.dongle_ptr, mode)
+end
+
+# tuner gain mode
+function set_tuner_gain_mode(r::RtlSdr, manual)
+    @assert r.valid_ptr
+    rtlsdr_set_tuner_gain_mode(r.dongle_ptr, manual)
+end
 
 """
 `read_samples(r::RtlSdr, num_samples)`
