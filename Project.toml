@@ -4,7 +4,3 @@ keywords = ["librtlsdr", "software-defined-radio"]
 license = "MIT"
 desc = "Julia wrapper for C librtlsdr library"
 version = "0.0.1"
-
-[deps]
-DSP = "717857b8-e6f2-59f4-9121-6e50c889abd2"
-PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee"
