@@ -1,13 +1,22 @@
 module RTLSDR
 
-using DSP: welch_pgram
 import Base.open, Base.close
 
-# I'm not sure I want this in here
-using PyPlot
+export
+    RtlSdr,
+    open,
+    close,
+    read_bytes,
+    read_samples,
+    packed_bytes_to_iq
 
-export RtlSdr, open, close, read_samples, get_strength, get_strength2
-export get_rate, set_rate, get_freq, set_freq, set_agc_mode, set_tuner_gain_mode
+export
+    get_rate,
+    set_rate,
+    get_freq,
+    set_freq,
+    set_agc_mode,
+    set_tuner_gain_mode
 
 include("c_interface.jl")
 
@@ -20,7 +29,7 @@ mutable struct RtlSdr
 
         r = new(true, dp)
 
-        # set sample rate and center freq
+        # default sample rate and center freq
         set_rate(r, 2.0e6)
         set_freq(r, 88.5e6)
 
@@ -36,21 +45,27 @@ function close(r::RtlSdr)
     r.valid_ptr = false
 end
 
-# Sample rate in MHz
+"""
+`set_rate(r::RtlSdr, sample_rate_Hz)
+"""
+function set_rate(r::RtlSdr, sample_rate_Hz)
+    @assert r.valid_ptr
+    rtlsdr_set_sample_rate(r.dongle_ptr, sample_rate_Hz)
+end
 function get_rate(r::RtlSdr)
     @assert r.valid_ptr
     rate = rtlsdr_get_sample_rate(r.dongle_ptr)
     return Int(rate)
 end
-function set_rate(r::RtlSdr, sample_rate)
-    @assert r.valid_ptr
-    rtlsdr_set_sample_rate(r.dongle_ptr, sample_rate)
-end
 
-# center frequency in MHz
-function set_freq(r::RtlSdr, freq)
+"""
+`set_freq(r::RtlSdr, freq_Hz)`
+
+Interface for `rtlsdr_set_center_freq`.
+"""
+function set_freq(r::RtlSdr, freq_Hz)
     @assert r.valid_ptr
-    rtlsdr_set_center_freq(r.dongle_ptr, freq)
+    rtlsdr_set_center_freq(r.dongle_ptr, freq_Hz)
 end
 function get_freq(r::RtlSdr)
     @assert r.valid_ptr
@@ -58,16 +73,34 @@ function get_freq(r::RtlSdr)
     return Int(freq)
 end
 
-# agc_mode
+"""
+Interface for `rtlsdr_set_agc_mode`
+"""
 function set_agc_mode(r::RtlSdr, mode)
     @assert r.valid_ptr
     rtlsdr_set_agc_mode(r.dongle_ptr, mode)
 end
 
-# tuner gain mode
+"""
+Interface for `rtlsdr_set_tuner_gain_mode`
+"""
 function set_tuner_gain_mode(r::RtlSdr, manual)
     @assert r.valid_ptr
     rtlsdr_set_tuner_gain_mode(r.dongle_ptr, manual)
+end
+
+"""
+`read_bytes(r::RtlSdr, num_bytes)`
+
+High-level interface for `rtlsdr_read_sync`.
+
+`num_bytes` must be a multiple of 512.
+
+Returns a vector of length `num_bytes` of Uint8 (bytes).
+"""
+function read_bytes(r::RtlSdr, num_bytes)
+    @assert r.valid_ptr
+    return read_bytes(r.dongle_ptr, num_bytes)
 end
 
 """
@@ -81,6 +114,10 @@ function read_samples(r::RtlSdr, num_samples)
     raw_data = read_bytes(r.dongle_ptr, num_bytes)
     return packed_bytes_to_iq(raw_data)
 end
+
+"""
+`packed_bytes_to_iq(bytes)`
+"""
 function packed_bytes_to_iq(bytes)
     num_bytes = length(bytes)
     num_iq = round(Int, num_bytes/2.0, RoundDown)
@@ -92,71 +129,6 @@ function packed_bytes_to_iq(bytes)
     end
 
     return iq_vals
-end
-
-# maximum 
-function get_strength(r::RtlSdr, n=10; plot_max::Bool=false)
-    max_sample = -Inf
-    max_p = 0
-    sample_rate = get_rate(r)
-    for i = 1:n
-        #samples = read_samples(r,256*10240)
-        #samples = read_samples(r, 256 * 1024 * 8)
-        #samples = read_samples(r,256*1024)
-        #samples = read_samples(r,256*940)
-        #samples = read_samples(r,256*920)
-        #samples = read_samples(r,256*900)
-        #samples = read_samples(r,256*800)
-        samples = read_samples(r, 256*500)
-        #samples = read_samples(r, 256*50)
-        p = welch_pgram(samples, fs=sample_rate)
-        temp_max = maximum(p.power)
-        if temp_max > max_sample
-            max_sample = temp_max
-            max_p = deepcopy(p)
-        end
-    end
-    if plot_max
-        center_freq = get_freq(r)
-        plot(max_p.freq + center_freq, 10log10(max_p.power))
-    end
-    return 10log10(max_sample)
-end
-
-
-
-function get_strength2(r::RtlSdr, n=10; plot_max::Bool=false)
-    max_sample = -Inf
-    max_p = 0
-    sample_rate = get_rate(r)
-    max_freqs = 0
-    max_pows = 0
-    for i = 1:n
-        samples = read_samples(r, 256*500)
-        p = welch_pgram(samples, fs=sample_rate)
-        n_plot = round(Int, length(p.power) / 2, RoundDown)-3
-        pows = p.power[2:n_plot]
-        freqs = p.freq[2:n_plot]
-
-        # taking maximum...
-        temp_max = maximum(pows)
-
-        # taking spectrum max...
-        temp_max = sum(pows)
-
-        if temp_max > max_sample
-            max_sample = temp_max
-            max_p = deepcopy(p)
-            max_pows = deepcopy(pows)
-            max_freqs = deepcopy(freqs)
-        end
-	end
-    if plot_max
-        center_freq = get_freq(r)
-        #plot(max_p.freq + center_freq, 10log10(max_p.power))
-        plot(max_freqs + center_freq, 10log10(max_pows))
-    end
-    return 10log10(max_sample*146.)
 end
 
 
