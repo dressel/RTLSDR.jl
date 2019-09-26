@@ -126,7 +126,6 @@ function rtlsdr_get_tuner_gain(rf::Ref{rtlsdr_dev})
 end
 
 
-# Some I/O stuff
 function read_bytes(rf::Ref{rtlsdr_dev}, num_bytes)
     buf = Vector{Cuchar}(undef,num_bytes)
     bytes_read = Ref{Cint}(0)
