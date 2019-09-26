@@ -55,7 +55,7 @@ get_freq(r)
 set_agc_mode(r, mode)               # rtlsdr_set_agc_mode
 set_tuner_gain_mode(r, manual)      # rtlsdr_set_tuner_gain_mode
 
-close(r)    # rtlsdr_close. cannot read
+close(r)    # rtlsdr_close. cannot read from r once this is called
 
 # rtlsdr_read_sync
 # retunrs vector of length num_bytes with Uint8 (bytes)
