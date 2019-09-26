@@ -37,7 +37,7 @@ set_freq(r, 88.5e6)		# if we wanted the center freq on NPR
 
 samples = read_samples(r, 1024)
 
-# plot a cool power spectral density
+# plot power spectral density
 using PyPlot
 psd(samples)
 ```
@@ -58,7 +58,7 @@ set_tuner_gain_mode(r, manual)      # rtlsdr_set_tuner_gain_mode
 close(r)    # rtlsdr_close. cannot read from r once this is called
 
 # rtlsdr_read_sync
-# retunrs vector of length num_bytes with Uint8 (bytes)
+# returns vector of length num_bytes with Uint8 (bytes)
 # num_bytes must be multiple of 512
 read_bytes(r, num_bytes)
 
