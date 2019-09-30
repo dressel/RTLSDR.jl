@@ -4,3 +4,6 @@ keywords = ["librtlsdr", "software-defined-radio"]
 license = "MIT"
 desc = "Julia wrapper for C librtlsdr library"
 version = "0.0.1"
+
+[compat]
+julia = "1"
